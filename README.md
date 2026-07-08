@@ -24,7 +24,7 @@ Then ask:
 /signalroom brief
 ```
 
-## Why It Fits The Slack Agent Builder Challenge
+## Built for Slack
 
 - **New Slack Agent:** users interact with SignalRoom in Slack through slash commands and app mentions.
 - **Slack AI agent surface:** SignalRoom is designed for Slack's agent surfaces with slash commands, app mentions, assistant thread events, suggested prompts, and evidence-backed Slack-native responses.
