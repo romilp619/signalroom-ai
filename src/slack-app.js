@@ -1,4 +1,5 @@
 import "dotenv/config";
+import http from "node:http";
 import { App, Assistant } from "@slack/bolt";
 import { routeSignalRoomCommand } from "./slack/commandRouter.js";
 import { workspaceFromSlackChannel } from "./providers/slackChannelWorkspace.js";
@@ -8,10 +9,12 @@ import { createSignalRoomAssistant } from "./slack/assistantAgent.js";
 import { cleanSignalRoomMessages } from "./slack/cleaner.js";
 import { debugLog, signalRoomConfig } from "./config.js";
 
+const socketMode = Boolean(process.env.SLACK_APP_TOKEN);
+
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  socketMode: Boolean(process.env.SLACK_APP_TOKEN),
+  socketMode,
   appToken: process.env.SLACK_APP_TOKEN
 });
 const config = signalRoomConfig(process.env);
@@ -147,5 +150,26 @@ function debugRenderedBlocks(blocks = []) {
 }
 
 const port = Number(process.env.PORT || 3000);
-await app.start(port);
+
+if (socketMode) {
+  const healthServer = http.createServer((request, response) => {
+    if (request.url === "/healthz" || request.url === "/") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ ok: true, service: "signalroom" }));
+      return;
+    }
+
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: false }));
+  });
+
+  healthServer.listen(port, () => {
+    console.log(`SignalRoom health server is listening on port ${port}`);
+  });
+
+  await app.start();
+} else {
+  await app.start(port);
+}
+
 console.log(`SignalRoom is running on port ${port}`);
