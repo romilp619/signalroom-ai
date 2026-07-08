@@ -32,6 +32,35 @@ Then ask:
 - **Real-Time Search API support:** SignalRoom includes a Slack `assistant.search.context` provider. When Slack provides an assistant action token, it uses that search context; otherwise it clearly falls back to channel history.
 - **Slack-Native UX:** output uses Block Kit risk cards, cited evidence, and one-click action buttons.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  U["Slack user"] --> SC["SignalRoom Slack agent"]
+  SC --> HIST["Slack conversations.history"]
+  SC --> AI["Slack AI assistant events"]
+  SC --> RTS["assistant.search.context provider"]
+  SC --> MCP["MCP HTTP connector layer"]
+  MCP --> GH["GitHub"]
+  MCP --> PM["Linear/Jira"]
+  MCP --> DOCS["Notion/Google Drive"]
+  MCP --> CAL["Calendar"]
+  HIST --> C["Context normalizer"]
+  RTS --> C
+  GH --> C
+  PM --> C
+  DOCS --> C
+  CAL --> C
+  C --> G["Risk graph builder"]
+  G --> E["Signal engine"]
+  E --> S["Slack Block Kit response"]
+  E --> B["Decision timeline"]
+  E --> W["What-if simulator"]
+  E --> R["Rescue brief"]
+```
+
+SignalRoom collects Slack conversation history, optional Slack AI search context, and optional MCP tool evidence, then normalizes everything into a risk graph before posting cited Slack-native rescue plans.
+
 ## Local Demo
 
 This runs without Slack credentials and produces the exact analysis used in the demo video:
