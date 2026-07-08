@@ -18,6 +18,8 @@ It searches live team context, maps blockers and decisions, finds contradictions
 
 <img width="1281" height="928" alt="image" src="https://github.com/user-attachments/assets/f036dff9-8ce0-4226-bd79-b7d7c3fa90d1" />
 
+<img width="2058" height="1224" alt="image" src="https://github.com/user-attachments/assets/21c0678b-bcd5-4a01-9c03-5215b9b63acd" />
+
 
 
 Ask:
