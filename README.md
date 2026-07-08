@@ -8,6 +8,18 @@ It searches live team context, maps blockers and decisions, finds contradictions
 
 ## Demo
 
+<img width="1630" height="483" alt="image" src="https://github.com/user-attachments/assets/52e83cf4-a609-4180-a18c-917e6a86a018" />
+
+
+<img width="1674" height="607" alt="image" src="https://github.com/user-attachments/assets/d067b106-ad3e-4bd1-ac0a-6f49426f0141" />
+
+<img width="1725" height="681" alt="image" src="https://github.com/user-attachments/assets/c66bd274-27df-4e86-a3cb-e56cdd9ed080" />
+
+
+<img width="1281" height="928" alt="image" src="https://github.com/user-attachments/assets/f036dff9-8ce0-4226-bd79-b7d7c3fa90d1" />
+
+
+
 Ask:
 
 ```text
