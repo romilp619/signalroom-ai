@@ -1,0 +1,57 @@
+{
+  "display_information": {
+    "name": "SignalRoom",
+    "description": "Predict hidden project risks before they become delays.",
+    "background_color": "#1D1C1D"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "SignalRoom",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/signalroom",
+        "description": "Ask SignalRoom for launch risk, what-if simulation, timelines, and briefs.",
+        "usage_hint": "launch | whatif payment slips 2 days | timeline | brief | clean",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "app_mentions:read",
+        "channels:history",
+        "channels:read",
+        "chat:write",
+        "commands",
+        "assistant:write",
+        "groups:history",
+        "groups:read",
+        "im:history",
+        "mpim:history",
+        "search:read.files",
+        "search:read.public",
+        "search:read.users",
+        "users:read"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "app_mention",
+        "assistant_thread_started",
+        "assistant_thread_context_changed",
+        "message.im"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
+  }
+}

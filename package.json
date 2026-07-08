@@ -1,0 +1,27 @@
+{
+  "name": "signalroom",
+  "version": "0.1.0",
+  "description": "A predictive Slack agent that detects hidden project risks before they become delays.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "demo": "node src/demo.js",
+    "mcp:demo": "node src/mcp/demoMcpServer.js",
+    "test": "node test/riskEngine.test.js && node test/commandRouter.test.js && node test/slackChannelWorkspace.test.js && node test/cleaner.test.js && node test/mcpContextProvider.test.js && node test/slackRealtimeSearchProvider.test.js && node test/config.test.js && node test/assistantAgent.test.js && node test/signalRoomTools.test.js && node test/demoMcpServer.test.js",
+    "start": "node src/slack-app.js"
+  },
+  "keywords": [
+    "slack",
+    "agent",
+    "risk-intelligence",
+    "mcp",
+    "real-time-search"
+  ],
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "dotenv": "^16.4.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
