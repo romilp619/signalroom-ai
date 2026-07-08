@@ -6,7 +6,7 @@ Most Slack agents tell teams what happened. SignalRoom tells them what is likely
 
 It searches live team context, maps blockers and decisions, finds contradictions, and generates an evidence-backed rescue plan inside Slack.
 
-## Winning Demo
+## Demo
 
 Ask:
 
