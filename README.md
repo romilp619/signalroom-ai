@@ -20,6 +20,15 @@ It searches live team context, maps blockers and decisions, finds contradictions
 
 <img width="2058" height="1224" alt="image" src="https://github.com/user-attachments/assets/21c0678b-bcd5-4a01-9c03-5215b9b63acd" />
 
+## Judge Access and Testing
+
+- **Slack developer sandbox:** [Open the SignalRoom Slack workspace](https://slacktoolchecker.slack.com/)
+- **Service health check:** [Wake or check the hosted SignalRoom service](https://signalroom-ai.onrender.com/healthz)
+
+SignalRoom is hosted on Render's free tier. If the first Slack command does not respond because the service is waking up, open the health-check link above, wait approximately 60 seconds, and retry the command.
+
+After entering the sandbox, join the demo channel, invite the agent with `/invite @SignalRoom`, and run `/signalroom launch`.
+
 
 
 Ask:
@@ -128,6 +137,8 @@ SIGNALROOM_DEBUG=false
 
 6. Keep Socket Mode enabled if your host does not expose a public Slack request URL.
 7. In Slack, create a channel such as `#signalroom-judging`, invite SignalRoom, post project-risk messages, then run `/signalroom launch`.
+
+SignalRoom's hosted demo uses Render's free tier. If the first command times out while the service wakes up, open [the SignalRoom health endpoint](https://signalroom-ai.onrender.com/healthz), wait approximately 60 seconds, and retry the command.
 
 If the app is run locally for a live demo, keep the terminal open for both the Slack app and the demo MCP server.
 
