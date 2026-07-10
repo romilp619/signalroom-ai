@@ -67,3 +67,31 @@ test("demo MCP server adds deployment context only when channel evidence matches
   assert.match(response.result.structuredContent.messages[0].text, /deployment waits/i);
   assert.equal(response.result.structuredContent.issues[0].id, "SIG-42");
 });
+
+test("demo MCP server ignores previous SignalRoom reports as evidence", () => {
+  const response = handleMcpJsonRpc({
+    jsonrpc: "2.0",
+    id: 4,
+    method: "tools/call",
+    params: {
+      name: "signalroom.project_context",
+      arguments: {
+        channel: "#signalroom-demo",
+        recentMessages: [
+          {
+            author: "SignalRoom",
+            text: ":test_tube: SignalRoom What-if Simulation\nScenario: deployment slips 2 days\nDeployment remains blocked on infra approval."
+          },
+          {
+            author: "Romil Patel",
+            text: "Blocker: payment webhook retries are still failing in staging."
+          }
+        ]
+      }
+    }
+  });
+
+  assert.equal(response.id, 4);
+  assert.deepEqual(response.result.structuredContent.messages, []);
+  assert.deepEqual(response.result.structuredContent.issues, []);
+});

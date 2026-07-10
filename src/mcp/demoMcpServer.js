@@ -5,10 +5,11 @@ const DEFAULT_PORT = Number(process.env.SIGNALROOM_MCP_DEMO_PORT || 8787);
 export function buildDemoMcpResult(args = {}) {
   const channel = args.channel || "#signalroom-ai-mcp-test";
   const recentText = (args.recentMessages || [])
+    .filter(isTeamContextMessage)
     .map((message) => message.text || "")
     .join("\n");
   const isDedicatedMcpDemo = /signalroom-ai-mcp-test|new-plan/i.test(channel);
-  const includeDeployment = isDedicatedMcpDemo || /deploy|deployment|staging|infra|rollback/i.test(recentText);
+  const includeDeployment = isDedicatedMcpDemo || /deploy|deployment|infra|rollback/i.test(recentText);
   const includeSecurity = isDedicatedMcpDemo || /security/i.test(recentText);
   const messages = [];
   const issues = [];
@@ -59,6 +60,19 @@ export function buildDemoMcpResult(args = {}) {
     docs,
     calendar: []
   };
+}
+
+function isTeamContextMessage(message = {}) {
+  const text = (message.text || "").trim();
+  const author = message.author || message.user || message.sender || "";
+  if (!text) return false;
+  if (/signalroom/i.test(author)) return false;
+  if (/^\/signalroom\b/i.test(text)) return false;
+  if (/cleaned \d+ signalroom messages/i.test(text)) return false;
+  if (/signalroom (risk radar|what-if simulation|decision timeline)/i.test(text)) return false;
+  if (/atlas launch rescue brief/i.test(text)) return false;
+  if (/^\s*:?(rotating_light|test_tube|clock3):/i.test(text)) return false;
+  return true;
 }
 
 export function handleMcpJsonRpc(payload) {
