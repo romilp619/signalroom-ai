@@ -4,46 +4,59 @@ const DEFAULT_PORT = Number(process.env.SIGNALROOM_MCP_DEMO_PORT || 8787);
 
 export function buildDemoMcpResult(args = {}) {
   const channel = args.channel || "#signalroom-ai-mcp-test";
+  const recentText = (args.recentMessages || [])
+    .map((message) => message.text || "")
+    .join("\n");
+  const isDedicatedMcpDemo = /signalroom-ai-mcp-test|new-plan/i.test(channel);
+  const includeDeployment = isDedicatedMcpDemo || /deploy|deployment|staging|infra|rollback/i.test(recentText);
+  const includeSecurity = isDedicatedMcpDemo || /security/i.test(recentText);
+  const messages = [];
+  const issues = [];
+  const docs = [];
+
+  if (includeDeployment) {
+    messages.push({
+      id: "mcp-github-1",
+      ts: new Date().toISOString(),
+      author: "GitHub MCP",
+      channel: "github/issues",
+      text: "Blocker: deployment waits on infra approval and rollback proof is not ready.",
+      permalink: "https://github.example.test/signalroom/issues/42"
+    });
+    issues.push({
+      id: "SIG-42",
+      title: "Deployment waits on infra approval",
+      owner: null,
+      status: "blocked",
+      priority: "high",
+      due: null,
+      url: "https://github.example.test/signalroom/issues/42"
+    });
+    docs.push({
+      id: "doc-risk-1",
+      title: "Launch rollback proof",
+      status: "not_ready",
+      owner: null,
+      text: `Rollback proof for ${channel} is not ready.`,
+      url: "https://docs.example.test/rollback-proof"
+    });
+  }
+
+  if (includeSecurity) {
+    messages.push({
+      id: "mcp-linear-1",
+      ts: new Date().toISOString(),
+      author: "Linear MCP",
+      channel: "linear/project-risk",
+      text: "Security review needs final approval and no owner is assigned.",
+      permalink: "https://linear.example.test/SIG-17"
+    });
+  }
+
   return {
-    messages: [
-      {
-        id: "mcp-github-1",
-        ts: new Date().toISOString(),
-        author: "GitHub MCP",
-        channel: "github/issues",
-        text: "Blocker: deployment waits on infra approval and rollback proof is not ready.",
-        permalink: "https://github.example.test/signalroom/issues/42"
-      },
-      {
-        id: "mcp-linear-1",
-        ts: new Date().toISOString(),
-        author: "Linear MCP",
-        channel: "linear/project-risk",
-        text: "Security review needs final approval and no owner is assigned.",
-        permalink: "https://linear.example.test/SIG-17"
-      }
-    ],
-    issues: [
-      {
-        id: "SIG-42",
-        title: "Deployment waits on infra approval",
-        owner: null,
-        status: "blocked",
-        priority: "high",
-        due: null,
-        url: "https://github.example.test/signalroom/issues/42"
-      }
-    ],
-    docs: [
-      {
-        id: "doc-risk-1",
-        title: "Launch rollback proof",
-        status: "not_ready",
-        owner: null,
-        text: `Rollback proof for ${channel} is not ready.`,
-        url: "https://docs.example.test/rollback-proof"
-      }
-    ],
+    messages,
+    issues,
+    docs,
     calendar: []
   };
 }
