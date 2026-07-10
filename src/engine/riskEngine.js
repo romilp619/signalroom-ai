@@ -8,17 +8,18 @@ const DECISION_PATTERN = /\b(decision:|launch date|release date|ship date|go-liv
 const UNRESOLVED_PATTERN = /\b(unresolved|pending|not ready|blocked|blocking|failing|broken|cannot start|can't start|waiting|waits|depends|needs|tbd|no owner|who owns|approval|signoff|delayed|stuck|unstable)\b/i;
 
 export function analyzeLaunchReadiness(workspace) {
+  const context = projectWorkspace(workspace);
   const project = workspace.project;
   const today = new Date(project.today);
   const launchDate = new Date(project.launchDate);
   const daysToLaunch = Math.max(0, Math.ceil((launchDate - today) / DAY_MS));
   const signals = dedupeSignals([
-    ...detectBlockers(workspace),
-    ...detectQaDependencyRisk(workspace),
-    ...detectMissingOwners(workspace),
-    ...detectOwnerOverload(workspace),
-    ...detectDecisionConflicts(workspace),
-    ...detectLaunchDateRisk(workspace, daysToLaunch)
+    ...detectBlockers(context),
+    ...detectQaDependencyRisk(context),
+    ...detectMissingOwners(context),
+    ...detectOwnerOverload(context),
+    ...detectDecisionConflicts(context),
+    ...detectLaunchDateRisk(context, daysToLaunch)
   ]);
   const riskScore = calculateRiskScore(signals, daysToLaunch);
   const readiness = Math.max(0, 100 - riskScore);
@@ -29,7 +30,7 @@ export function analyzeLaunchReadiness(workspace) {
     riskScore,
     readiness,
     level: riskLevel(riskScore),
-    messageCount: countProjectMessages(workspace.messages),
+    messageCount: countProjectMessages(context.messages),
     summary: buildSummary(riskScore, readiness, daysToLaunch),
     scoreExplanation: explainScore(signals),
     signals,
@@ -39,9 +40,10 @@ export function analyzeLaunchReadiness(workspace) {
 }
 
 export function buildDecisionTimeline(workspace) {
+  const context = projectWorkspace(workspace);
   const events = [];
 
-  for (const message of workspace.messages) {
+  for (const message of context.messages) {
     const text = message.text;
     if (/decision:|keeping the public launch date|do not launch unless/i.test(text)) {
       events.push(timelineEvent(message, "Decision", normalizeDecision(text)));
@@ -61,8 +63,9 @@ export function buildDecisionTimeline(workspace) {
 }
 
 export function buildWhatIfSimulation(workspace, scenario) {
-  const baseline = analyzeLaunchReadiness(workspace);
-  const scenarioSignal = buildScenarioSignal(workspace, scenario);
+  const context = projectWorkspace(workspace);
+  const baseline = analyzeLaunchReadiness(context);
+  const scenarioSignal = buildScenarioSignal(context, scenario);
   const hasDirectEvidence = scenarioSignal?.directEvidenceFound;
   const scenarioSignals = hasDirectEvidence ? dedupeSignals([...baseline.signals, scenarioSignal]) : baseline.signals;
   const projectedRisk = hasDirectEvidence
@@ -107,7 +110,7 @@ export function buildRescueBrief(workspace) {
 }
 
 export function simulateScenario(workspace, scenario) {
-  const signal = buildScenarioSignal(workspace, scenario);
+  const signal = buildScenarioSignal(projectWorkspace(workspace), scenario);
   return signal ? [signal] : [];
 }
 
@@ -442,12 +445,22 @@ function countProjectMessages(messages = []) {
   return seen.size;
 }
 
+function projectWorkspace(workspace) {
+  return {
+    ...workspace,
+    messages: (workspace.messages || []).filter(isProjectMessage)
+  };
+}
+
 function isProjectMessage(message) {
   const text = (message?.text || "").trim();
   if (!text) return false;
   if (/^\/signalroom\b/i.test(text)) return false;
   if (/joined #|was added to #|cleaned \d+ signalroom messages/i.test(text)) return false;
   if (/signalroom/i.test(message.author || "")) return false;
+  if (/signalroom (risk radar|what-if simulation|decision timeline)/i.test(text)) return false;
+  if (/atlas launch rescue brief/i.test(text)) return false;
+  if (/^\s*:?(rotating_light|test_tube|clock3):/i.test(text)) return false;
   return true;
 }
 
@@ -690,9 +703,9 @@ function topicEvidenceScore(text, topic) {
   const normalizedTopic = normalizeTopic(topic);
   if (normalizedTopic && new RegExp(escapeRegExp(normalizedTopic).replace(/-/g, ".{0,12}"), "i").test(text)) score += 5;
   if (/\b(blocker|blocked|blocking|failing|failure|broken|cannot start|can't start|delayed|delay|stuck|not ready|unstable|waits on|waiting on|depends on)\b/i.test(text)) score += 4;
-  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /deploy|deployment|staging|infra|rollback/i.test(text)) score += 4;
-  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /\b(infra|infrastructure|rollback|staging)\b/i.test(text)) score += 5;
-  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /\b(blocker|blocked|waits on|waiting on|not ready|proof)\b/i.test(text)) score += 4;
+  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /deploy|deployment|infra|rollback/i.test(text)) score += 4;
+  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /\b(infra|infrastructure|rollback)\b/i.test(text)) score += 5;
+  if (/deploy|deployment|staging|infra|rollback/i.test(topic) && /deploy|deployment|infra|rollback/i.test(text) && /\b(blocker|blocked|waits on|waiting on|not ready|proof)\b/i.test(text)) score += 4;
   if (/payment|webhook|checkout/i.test(topic) && /\b(payment|payment webhook|billing|invoice|checkout payment|payment qa|transaction|refund)\b/i.test(text)) score += 4;
   if (/approval|signoff|owner|tbd|no owner/i.test(text)) score += 2;
   if (/launch|release|ship|go-live|thursday|friday/i.test(text)) score += 1;
@@ -723,8 +736,8 @@ function parseScenarioIntent(scenario) {
 function topicEvidencePatterns(topic) {
   if (/deploy|deployment|staging|infra|rollback/i.test(topic)) {
     return [
-      /\b(deploy|deployment|staging|infra|infrastructure|rollback|release)\b/i,
-      /(?=.*\b(deploy|deployment|staging|infra|rollback)\b)(?=.*\b(blocked|waits on|waiting on|not ready|approval|proof|delayed|stuck)\b)/i
+      /\b(deploy|deployment|infra|infrastructure|rollback)\b/i,
+      /(?=.*\b(deploy|deployment|infra|rollback)\b)(?=.*\b(blocked|waits on|waiting on|not ready|approval|proof|delayed|stuck)\b)/i
     ];
   }
 

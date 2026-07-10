@@ -559,3 +559,51 @@ test("classifies locked release date as schedule risk instead of blocker", () =>
   assert.ok(!analysis.signals.some((signal) => signal.type === "blocker" && /release date is locked/i.test(signal.evidence[0].quote)));
   assert.ok(analysis.signals.some((signal) => signal.title === "Missing owner: security review final approval"));
 });
+
+test("ignores previous SignalRoom bot output when building what-if evidence", () => {
+  const workspace = {
+    project: {
+      name: "Atlas Launch",
+      launchDate: "2026-07-05",
+      today: "2026-06-30",
+      channel: "#signalroom-demo",
+      owner: "Romil Patel"
+    },
+    messages: [
+      {
+        id: "p1",
+        ts: "2026-06-30T09:39:00+05:30",
+        author: "Romil Patel",
+        channel: "#signalroom-demo",
+        text: "Decision: we are keeping the public launch date at Friday unless payment or QA changes.",
+        permalink: "slack://channel/signalroom-demo/p1"
+      },
+      {
+        id: "p2",
+        ts: "2026-06-30T09:40:00+05:30",
+        author: "Romil Patel",
+        channel: "#signalroom-demo",
+        text: "Blocker: payment webhook retries are still failing in staging. I can keep digging after auth QA.",
+        permalink: "slack://channel/signalroom-demo/p2"
+      },
+      {
+        id: "p3",
+        ts: "2026-06-30T14:08:00+05:30",
+        author: "SignalRoom",
+        channel: "#signalroom-demo",
+        text: ":test_tube: SignalRoom What-if Simulation\nScenario: deployment slips 2 days\nDeployment remains blocked on infra approval.\nRollback proof stays incomplete.",
+        permalink: "slack://channel/signalroom-demo/p3"
+      }
+    ],
+    issues: [],
+    docs: [],
+    calendar: []
+  };
+
+  const deployment = buildWhatIfSimulation(workspace, "deployment slips 2 days");
+  const payment = buildWhatIfSimulation(workspace, "payment slips 2 days");
+
+  assert.equal(deployment.confidence, "Low");
+  assert.ok(deployment.affectedDependencies.some((item) => /No direct evidence found for deployment/i.test(item)));
+  assert.equal(payment.confidence, "High");
+});
